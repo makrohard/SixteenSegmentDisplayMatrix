@@ -1,0 +1,76 @@
+@font-face {
+  font-family: 'sixteensegmentdisplay';
+  src: url('sixteensegmentdisplay.woff') format('woff'),
+  url('sixteensegmentdisplay.ttf') format('truetype');
+}
+
+body {
+  font-family: 'sixteensegmentdisplay', monospace;
+}
+
+fieldset {  
+  float: left;
+  border-width: thick;
+  border-color: #000000;
+  border-style: double;
+  margin: 0.5em;
+}
+
+.label {
+  font-family: 'sixteensegmentdisplay', monospace;
+  float: left;
+  width: 12em;
+  display: block;
+  white-space: nowrap;
+}
+
+.selectdemo {
+  font-family: 'sixteensegmentdisplay', monospace;
+}
+
+.runbutton {
+  font-family: 'sixteensegmentdisplay', monospace;
+}
+
+.divmatrixcontainer {
+  float: left;
+  border-width: thick;
+  border-color: #000000;
+  border-style: double;
+  margin: 0.5em;
+}
+
+.divoutersvg {
+  display: block;
+  margin-left: 0.5em;
+  margin-right: 0.5em;
+  overflow: hidden;
+  resize: both;
+}  
+
+.divinnersvg {
+  border-width: thin;
+  border-color: #000000;  
+  border-style: solid;
+}
+
+.stopbutton {
+  font-family: 'sixteensegmentdisplay', monospace;
+  float: right;
+  width: 2em;
+  margin: 0.5em;
+}
+
+.fgcolorinput {
+  font-family: 'sixteensegmentdisplay', monospace;
+  float: left;
+  width: 7em;
+  margin: 1em;
+}
+
+.bgcolorinput {
+  font-family: 'sixteensegmentdisplay', monospace;
+  display: block;
+  width: 7em;
+  margin: 1em;
+}

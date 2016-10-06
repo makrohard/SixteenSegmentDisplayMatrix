@@ -1,101 +1,32 @@
 <!DOCTYPE html>
-
+ <!--  Animated Matrix 0.2 alpha  (c) 2016 Johannes Loose, johannes@35007.de  -->
 <html lang="de">
-	<head>
-		<meta charset="utf-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1.0">
-		<link rel="stylesheet" href="generatorform.css" type="text/css"/>
-		<title>Animated Matrix Demos</title>
-	</head>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="animatedmatrix.css" type="text/css"/>
+    <title>Animated Matrix Demos</title>
+  </head>
 
-	<!--
-	Animated Matrix 0.1 alpha
-	
-	The MIT License (MIT)
-	
-	(c) 2016 Johannes Loose, johannes@35007.de
-	
-	Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
-	documentation files (the "Software"), to deal in the Software without restriction,including without limitation
-	the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,
-	and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-	
-	The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-	
-	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO
-	THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-	TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-	-->
+  <body>
+    <form id="formanimatedmatrix"> 
+      <fieldset id="fsanimatedmatrix">
+        <legend title="Animated Sixteen Segment Display Matrix">Animated SISD Matrix</legend>
+        <label title="Choose Demo" class="label" for="selectdemo">Choose Demo</label>
+        <select id="selectdemo" class="selectdemo">
+          <option value="clock" title="Demo of a running clock." selected="selected">Clock</option>
+          <option value="marquee" title="Running Text">Marquee</option>
+          <option value="spinner" title="Spinning Segment">Spinner</option>
+          <option value="bouncer" title="Bouncer Demo">Bouncer</option>
+        </select>
+      <button type="button" class="runbutton" id="btnrun">RUN</button>
+    </fieldset>
+    </form>
 
-	<body>
+  <div id="divsvgcontainer" class="divsvgcontainer"></div>
   
-	<form id="get_user_inputs" class="mainform"> 
+  <script type="text/javascript" src="animatedmatrix.js"></script>
+  <script type="text/javascript" src="animatedmatrixform.js"></script>  
 
-
-	<fieldset id="fsanimatedmatrix" class="fsouter">
-		<legend title="Animated Matrix">Animated SISD Matrix</legend>
-			
-		<fieldset id="fsstartdemo" class="fsinner">
-			<legend title="Click &amp;Run&amp; to start demo.">Choose Demo</legend>
-			<ul>
-			
-				<li>				
-					<label title="Start Clock" class="label" for="btnclock">Start Clock</label>
-					<button type="button" class="mybutton" id="btnclock" onclick="startclock()">RUN</button>
-				</li>
-				<li>
-					<br>
-					<label title="Start Marquee" class="label" for="btnmarquee">Start Marquee</label>
-					<button type="button" class="mybutton" id="btnmarquee" onclick="startmarquee()">RUN</button>
-				</li>
-				<li>
-					<br>
-					<label title="Start Spinner" class="label" for="btnspinner">Start Spinner</label>
-					<button type="button" class="mybutton" id="btnspinner" onclick="startspinner()">RUN</button>
-				</li>
-				<li>
-					<br>
-					<label title="Start Bouncer" class="label" for="btnbouncer">Start Bouncer</label>
-					<button type="button" class="mybutton" id="btnbouncer" onclick="startbouncer()">RUN</button>
-				</li>
-				<li>
-					<br>
-					<label title="Stop animation" class="label" for="btnstop">Stop Animation</label>
-					<button type="button" class="mybutton" id="btnstop" onclick="stopanimation()">STOP</button>
-				</li>												
-			</ul>
-		</fieldset>
-
-		<fieldset id="fscolors" class="fsinner">
-			<legend title="Set color of inactive and active segments.">Colors</legend>
-			<ul>
-				<li>
-					<label for="charcolor" class="label" title="Color of active segments.">Chars Color</label> 
-					<input id="charcolor" value="#f00000" class="colorinput" type="color" title="Hex triplet color code expected.">
-					<br>
-				</li>
-				<li>	
-					<label for="bgcolor" class="label" title="Color of inactive segments.">Background Color</label>
-					<input id="bgcolor" value="#f0f0f0" class="colorinput" type="color" title="Hex triplet color code expected.">
-					<br>
-				</li>
-			</ul>
-		</fieldset>
-	
-	</fieldset>
-
-	</fieldset>
-
-
-	<div id="divsvgtarget" class="divsvgtarget">
-		<div id="divoutersvg" class="divoutersvg">
-		</div>
-	</div>	
-
-   <script type="text/javascript" src="charset.js"></script>
-	<script type="text/javascript" src="animatedmatrix.js"></script>
-   <script type="text/javascript" src="animatedmatrixform.js"></script>
-	
   </body>
 </html>
