@@ -1,6 +1,6 @@
 /*
-Animated Matrix Form
-version 0.2
+Animated Matrix Form - site functions
+0.2.1 alpha
 
 The MIT License (MIT)
 
@@ -18,7 +18,6 @@ THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRI
 AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
-
 window.animatedMatrices = { matrixid: 0 }; // Object to store running matrices
 
 // GUI to start and stop animations
@@ -37,7 +36,7 @@ window.animatedMatrices = { matrixid: 0 }; // Object to store running matrices
     startanimation: function (animation) {
       switch (animation) {
         case 'clock':
-          this.callsetinterval({
+          this.startsingleanimation({
             animationcaller: Animation('clock'),
             animationfunction: 'setTime()',
             animationinterval: 100,
@@ -45,7 +44,7 @@ window.animatedMatrices = { matrixid: 0 }; // Object to store running matrices
           });
           break;
         case 'marquee':
-          this.callsetinterval({
+          this.startsingleanimation({
             animationcaller: Animation('marquee', 'Hello World', 12),
             animationfunction: 'setMarquee()',
             animationinterval: 500,
@@ -53,7 +52,7 @@ window.animatedMatrices = { matrixid: 0 }; // Object to store running matrices
           });
           break;
         case 'spinner':
-          this.callsetinterval({
+          this.startsingleanimation({
             animationcaller: Animation('spinner'),
             animationfunction: 'setSpinner()',
             animationinterval: 125,
@@ -61,36 +60,50 @@ window.animatedMatrices = { matrixid: 0 }; // Object to store running matrices
           });
           break;
         case 'bouncer':
-          this.callsetinterval({
+          this.startsingleanimation({
             animationcaller: Animation('bouncer', 16, 36),
             animationfunction: 'setBouncer()',
             animationinterval: 300,
             animationscale: 0.08
           });
           break;
+        case 'typewriter':
+          this.startsingleanimation({
+            animationcaller: Animation('typewriter', 10, 30), // 25 80
+            animationscale: 0.08
+          });          
+          break;
         default:
           return;
       }
     },
 
-    stopanimation: function (animationid) {
-      clearInterval(animatedMatrices['matrix' + animationid].timer); // clear timer
-      showremovematrix.removematrix(animationid); // remove from DOM
-      delete window.animatedMatrices['matrix' + animationid]; // delete property from global matrix object
-    },
-    callsetinterval: function (param) {
+    startsingleanimation: function (param) {
       window.animatedMatrices.matrixid++; // increment id to reference matrices
       var matrix = (function () {
         return param.animationcaller;
       }()); // make an instance of an animated matrix
+      
+      if (param.animationfunction !== undefined && param.animationinterval !== undefined) {
+        var timer = (function () {
+          return window.setInterval(('animatedMatrices[\'matrix' + window.animatedMatrices.matrixid + '\'].animation.' + param.animationfunction), param.animationinterval);
+        }())      
+      } else {
+        var timer = false;
+      }  
+        
       window.animatedMatrices['matrix' + window.animatedMatrices.matrixid] = { // put new matrix and timer reference in global matrix array 
         animation: matrix,
-        timer: (function () {
-          return window.setInterval(('animatedMatrices[\'matrix' + window.animatedMatrices.matrixid + '\'].animation.' + param.animationfunction), param.animationinterval);
-        }())
+        timer: timer 
       };
       showremovematrix.showmatrix(window.animatedMatrices.matrixid, matrix.matrix.svgcode, matrix.matrix.mywidth * param.animationscale); // write to DOM
-    }
+    },
+    
+    stopanimation: function (animationid) {
+      clearInterval(animatedMatrices['matrix' + animationid].timer); // clear timer
+      showremovematrix.removematrix(animationid); // remove from DOM
+      delete window.animatedMatrices['matrix' + animationid]; // delete property from global matrix object
+    },                
   };
 
   var showremovematrix = {

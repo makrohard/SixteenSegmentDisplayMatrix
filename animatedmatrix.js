@@ -1,6 +1,6 @@
 /*
 Animated Matrix
-version 0.2
+version 0.2.1 alpha
 
 The MIT License (MIT)
 
@@ -111,19 +111,24 @@ TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR TH
 *       animatedMatrix.drawFrame('#000000');
 *       window.setInterval('animatedMatrix.setBouncer()', 125);
 *
+*   * Typewriter - activates on focus, the blinking cursor interval is set from inside
+*       animatedMatrix = Animation('typewriter', 10, 30);
+*
 */
+
 // **
 // ** Segment Display Matrix
 // **
-var segmentDisplayMatrix = function(rows, cols) {
+
+var segmentDisplayMatrix = function(rows, cols, specials) {
   "use strict";
 
   this.foregroundColor = '#FF0000'; // colors als instance properties
   this.backgroundColor = '#F0F0F0';
   var backgroundColor = this.backgroundColor;
-
-  if (rows === undefined) var rows = 1; // validate attributes rows, cols 
-  if (cols === undefined) var cols = 1;
+  var addeventanchor = (specials === 'typewriter') ? true : false; // draw clickable anchor to give focus on element
+  if (rows === undefined) rows = 1; // validate attributes rows, cols 
+  if (cols === undefined) cols = 1;
   if (isNaN(rows) || rows < 1) rows = 1;
   if (isNaN(cols) || cols < 1) cols = 1;
   rows = parseInt(rows, 10);
@@ -133,7 +138,7 @@ var segmentDisplayMatrix = function(rows, cols) {
 
   // initializes private properties, calculates dimensions, returns matrix properties
   function creatematrix(rows, cols) {
-    var myid = ('0000' + (Math.random() * Math.pow(36, 4) << 0).toString(36)).slice(-4); // create short random id            
+    var myid = ("0000" + (Math.random() * Math.pow(36, 4) << 0).toString(36)).slice(-4); // Create short random id. Needed to keep ids unique if multible matrices drawn in one html document            
     var segmentwidth = 220; // display dimensions and spacing 
     var segmentspacingwidth = 20;
     var segmentheight = 360;
@@ -179,9 +184,11 @@ var segmentDisplayMatrix = function(rows, cols) {
         'm 120,210 15,0 35,50 0,50 -15,0 -15,-30 z',
       ];
       var svgtag = document.createElementNS(nssvg, 'svg'); // <svg viewBox="0 0  980 1160" version="1.1" id="segmentdisplaymatrix_g4lw">
-      svgtag.setAttribute('id', 'segmentdisplaymatrix_' + myid);
-      svgtag.setAttribute('version', '1.1');
-      svgtag.setAttribute('viewBox', viewbox);
+        svgtag.setAttribute('id', 'segmentdisplaymatrix_' + myid);
+        svgtag.setAttribute('version', '1.1');
+        svgtag.setAttribute('viewBox', viewbox);
+      svgelements.svg = svgtag; // put svg tag in array
+        
       var mydefs = document.createElementNS(nssvg, 'defs'); // <defs>
       for (i = 0; i < segmentscount - 1; i++) {
         path = document.createElementNS(nssvg, 'path'); // <path d="m 30,0 -10,10 30,30 55,0 0,-30 -10,-10 z" id="A1_g4lw">
@@ -190,34 +197,53 @@ var segmentDisplayMatrix = function(rows, cols) {
         mydefs.appendChild(path);
       }
       var mycircle = document.createElementNS(nssvg, 'circle'); // <circle r="7" cy="350" cx="215" id="DP">
-      mycircle.setAttribute('id', 'DP_' + myid);
-      mycircle.setAttribute('cx', '215');
-      mycircle.setAttribute('cy', '350');
-      mycircle.setAttribute('r', '7');
+        mycircle.setAttribute('id', 'DP_' + myid);
+        mycircle.setAttribute('cx', '215');
+        mycircle.setAttribute('cy', '350');
+        mycircle.setAttribute('r', '7');
       mydefs.appendChild(mycircle);
+      
       svgtag.appendChild(mydefs);
+      
+    
       var gmatrix = document.createElementNS(nssvg, 'g'); // matrix <g style="fill: rgb(240, 240, 240);">
-      gmatrix.style.fill = backgroundColor;
-      svgelements['matrix'] = gmatrix; // put matrix element in array
+        gmatrix.style.fill = backgroundColor;        
+      svgelements.matrix = gmatrix; // put matrix element in array
       for (row = 1; row < rows + 1; row++) {
-        svgelements['segments'][row] = [];
-        svgelements['displays'][row] = [];
+        svgelements.segments[row] = [];
+        svgelements.displays[row] = [];
         for (col = 1; col < cols + 1; col++) {
           gdisplay = document.createElementNS(nssvg, 'g'); // display <g transform="translate(20 20)">
           gdisplay.setAttribute('transform', 'translate(' + getwidth(col - 1) + ' ' + getheight(row - 1) + ')');
-          svgelements['displays'][row][col] = gdisplay; // put display element in array
-          svgelements['segments'][row][col] = {};
+          svgelements.displays[row][col] = gdisplay; // put display element in array
+          svgelements.segments[row][col] = {};
 
           for (i = 0; i < segmentscount; i++) {
             segment = document.createElementNS(nssvg, 'use'); // segment <use xlink:href="#A1_g4lw">
             segment.setAttributeNS(nsxlink, 'xlink:href', '#' + segmentnames[i] + '_' + myid);
-            svgelements['segments'][row][col][segmentnames[i]] = segment; // put segment elements in array
+            svgelements.segments[row][col][segmentnames[i]] = segment; // put segment elements in array
             gdisplay.appendChild(segment);
           }
           gmatrix.appendChild(gdisplay);
         }
       }
-      svgtag.appendChild(gmatrix);
+      svgtag.appendChild(gmatrix);    
+
+      // anchor as cross-browser focuseable object to attach events an focus
+      if (addeventanchor) {            
+        var eventanchor = document.createElementNS(nssvg, 'a'); // <a xlink:href="javascript: void 0">
+          eventanchor.setAttributeNS(nsxlink, 'xlink:href', 'javascript: void(0)');
+        svgelements.anchor = eventanchor; // put eventanchor in array
+  
+        var myrect = document.createElementNS(nssvg, 'rect'); // <a xlink:href="javascript: void 0">
+          myrect.setAttribute('x', '0');   //transparent rectangle covering all space as clickable object to give focus 
+          myrect.setAttribute('y', '0');
+          myrect.setAttribute('width', mywidth);
+          myrect.setAttribute('height', myheight) ;
+          myrect.setAttribute('fill-opacity', '0');
+        eventanchor.appendChild(myrect);
+        svgtag.appendChild(eventanchor);  
+     }      
       return svgtag;
     }
     // calculate width 
@@ -245,7 +271,7 @@ var segmentDisplayMatrix = function(rows, cols) {
 };
 
 // **
-// ** Commands
+// ** Basic commands
 // **
 segmentDisplayMatrix.prototype = {
   constructor: segmentDisplayMatrix,
@@ -257,9 +283,9 @@ segmentDisplayMatrix.prototype = {
       row = parseInt(row, 10); // force type integer
       col = parseInt(col, 10);
       if (!this.tools.rowcolinbounds.call(this, row, col)) throw ('The display position to write to is not within matrix boundaries or row / column are not integer. Matrix: ' + this.matrix.rows + ', ' + this.matrix.cols + ' Requested: ' + row + ', ' + col);
-      if (this.matrix.svgelements['segments'][row][col][seg] === undefined) throw ('Segment does not exist in array. Row: ' + row + ' Column: ' + col + ' Segment: ' + seg);
+      if (this.matrix.svgelements.segments[row][col][seg] === undefined) throw ('Segment does not exist in array. Row: ' + row + ' Column: ' + col + ' Segment: ' + seg);
 
-      this.matrix.svgelements['segments'][row][col][seg].style.fill = htmlcolor; // write style.fill to segment
+      this.matrix.svgelements.segments[row][col][seg].style.fill = htmlcolor; // write style.fill to segment
     } catch (err) {
       return err;
     }
@@ -277,7 +303,7 @@ segmentDisplayMatrix.prototype = {
       var i = 0;
 
       for (i = 0; i < segmentscount; i++) {
-        this.matrix.svgelements['segments'][row][col][this.matrix.segmentnames[i]].style.fill = htmlcolor;
+        this.matrix.svgelements.segments[row][col][this.matrix.segmentnames[i]].style.fill = htmlcolor;
       }
     } catch (err) {
       return err;
@@ -292,7 +318,7 @@ segmentDisplayMatrix.prototype = {
       for (var col = 1; col <= this.matrix.cols; col++) {
         for (var row = 1; row <= this.matrix.rows; row++) {
           for (var i = 0; i < segmentscount; i++) {
-            this.matrix.svgelements['segments'][row][col][this.matrix.segmentnames[i]].style.fill = htmlcolor;
+            this.matrix.svgelements.segments[row][col][this.matrix.segmentnames[i]].style.fill = htmlcolor;
           }
         }
       }
@@ -315,10 +341,10 @@ segmentDisplayMatrix.prototype = {
       var segmentnameslength = this.matrix.segmentnames.length;
 
       for (i = 0; i < segmentnameslength; i++) { // clear display
-        this.matrix.svgelements['segments'][row][col][this.matrix.segmentnames[i]].style.fill = '';
+        this.matrix.svgelements.segments[row][col][this.matrix.segmentnames[i]].style.fill = '';
       }
       for (i = 0; i < segmentarraylength; i++) { // write character to display
-        this.matrix.svgelements['segments'][row][col][segmentarray[i]].style.fill = htmlcolor;
+        this.matrix.svgelements.segments[row][col][segmentarray[i]].style.fill = htmlcolor;
       }
     } catch (err) {
       return err;
@@ -331,7 +357,7 @@ segmentDisplayMatrix.prototype = {
       if (arguments.length < 2 || row > this.matrix.rows) throw 'Missing argument(s) or row out of matrix boundaries.';
       row = parseInt(row, 10);
       var mytext = textline.toString();
-      if (mytext.length == 0) throw 'Text string is empty.';
+      if (mytext.length === 0) throw 'Text string is empty.';
       var htmlcolor = this.tools.htmlcolor.call(this, mycolor);
       var cols = mytext.length <= this.matrix.cols ? mytext.length : this.matrix.cols;
       var segmentarray = '';
@@ -343,13 +369,13 @@ segmentDisplayMatrix.prototype = {
       for (col = 1; col <= cols; col++) {
         // clear display
         for (i = 0; i < segmentnameslength; i++) {
-          this.matrix.svgelements['segments'][row][col][this.matrix.segmentnames[i]].style.fill = '';
+          this.matrix.svgelements.segments[row][col][this.matrix.segmentnames[i]].style.fill = '';
         }
         // write one character to display
         segmentarray = this.tools.getcharsegments.call(this, 'U' + this.tools.dectohex(textline.toString().codePointAt(col - 1)));
         segmentarraylength = segmentarray.length;
         for (i = 0; i < segmentarraylength; i++) {
-          this.matrix.svgelements['segments'][row][col][segmentarray[i]].style.fill = htmlcolor;
+          this.matrix.svgelements.segments[row][col][segmentarray[i]].style.fill = htmlcolor;
         }
       }
     } catch (err) {
@@ -366,7 +392,7 @@ segmentDisplayMatrix.prototype = {
       col = parseInt(col, 10);
       if (!this.tools.rowcolinbounds.call(this, row, col)) throw ('The display position to write to is not within matrix boundaries or row / column are not integer. Matrix: ' + this.matrix.rows + ', ' + this.matrix.cols + ' Requested: ' + row + ', ' + col);
 
-      this.matrix.svgelements['displays'][row][col].style.fill = htmlcolor;
+      this.matrix.svgelements.displays[row][col].style.fill = htmlcolor;
     } catch (err) {
       return err;
     }
@@ -378,7 +404,7 @@ segmentDisplayMatrix.prototype = {
       var htmlcolor = this.tools.htmlcolor.call(this, mycolor);
       for (var col = 1; col <= this.matrix.cols; col++) {
         for (var row = 1; row <= this.matrix.rows; row++) {
-          this.matrix.svgelements['displays'][row][col].style.fill = htmlcolor;
+          this.matrix.svgelements.displays[row][col].style.fill = htmlcolor;
         }
       }
     } catch (err) {
@@ -390,7 +416,7 @@ segmentDisplayMatrix.prototype = {
   setMatrixGroup: function(mycolor) {
     try {
       var htmlcolor = this.tools.htmlcolor.call(this, mycolor);
-      this.matrix.svgelements['matrix'].style.fill = htmlcolor;
+      this.matrix.svgelements.matrix.style.fill = htmlcolor;
     } catch (err) {
       return err;
     }
@@ -433,7 +459,6 @@ segmentDisplayMatrix.prototype = {
           return '';
       }
       htmlcolor = htmlcolor.toString();
-      var isvalidcolor = false;
       // hex
       if (/(^#[0-9A-F]{6}$)|(^#[0-9A-F]{3}$)/i.test(htmlcolor.toUpperCase())) return htmlcolor;
       // RGB
@@ -627,6 +652,7 @@ segmentDisplayMatrix.prototype.charset = {
   U25A3: ['A1', 'A2', 'B', 'C', 'D1', 'D2', 'E', 'F', 'G1', 'G2', 'H', 'I', 'J', 'K', 'L', 'M', 'DP'] // ▣ AllChars
 };
 
+
 // **
 // ** Animations
 // **
@@ -637,6 +663,7 @@ var Animation = function(demo) {
   var animate = loadanimations();
 
   try {
+    // validate arguments, call starter
     switch (demo) {
       case undefined:
         throw ('No command specified.');
@@ -666,6 +693,14 @@ var Animation = function(demo) {
         myinstance = animate.startbouncer(row, col);
         myinstance.drawFrame('#000000');
         break;
+      case 'typewriter':
+        if (arguments.length < 3) throw 'One or more required arguments are missing.';
+        var row = parseInt(arguments[1], 10); // force type integer
+        var col = parseInt(arguments[2], 10);
+        if (row < 1 || col < 1) throw 'Invalid dimensions.';
+        myinstance = animate.starttypewriter(row, col);
+        myinstance.addFocusKeyboardHandler();
+        break;        
       default:
         throw ('Unknown command: ' + demo);
     }
@@ -686,8 +721,7 @@ var Animation = function(demo) {
         };
         inheritPrototype(Clock, segmentDisplayMatrix);
         Clock.prototype.setTime = this.protos.setTime;
-        var ClockInstance = new Clock();
-        return ClockInstance;
+        return new Clock();
       },
       // Marquee
       startmarquee: function(textstring, matrixlength) {
@@ -699,8 +733,7 @@ var Animation = function(demo) {
         };
         inheritPrototype(Marquee, segmentDisplayMatrix);
         Marquee.prototype.setMarquee = this.protos.setMarquee;
-        var MarqueeInstance = new Marquee();
-        return MarqueeInstance;
+        return new Marquee();
       },
       // Spinner    
       startspinner: function() {
@@ -713,8 +746,7 @@ var Animation = function(demo) {
         inheritPrototype(Spinner, segmentDisplayMatrix);
         Spinner.prototype.setSpinner = this.protos.setSpinner;
         Spinner.prototype.charset = this.protos.spinnerCharset;
-        var SpinnerInstance = new Spinner();
-        return SpinnerInstance;
+        return new Spinner();
       },
       // Bouncer   
       startbouncer: function(rows, cols) {
@@ -729,12 +761,64 @@ var Animation = function(demo) {
         };
         inheritPrototype(Bouncer, segmentDisplayMatrix);
         Bouncer.prototype.setBouncer = this.protos.setBouncer;
-        Bouncer.prototype.moveball = this.protos.moveball;
+        Bouncer.prototype.moveBall = this.protos.moveBall;
         Bouncer.prototype.drawFrame = this.protos.drawFrame;
-        var BouncerInstance = new Bouncer();
-        return BouncerInstance;
+        return new Bouncer();
       },
+            
+      // Typewriter   
+      starttypewriter: function(rows, cols) {
+        var Typewriter = function() {
+          
+          this.typewriter = {
+            position : {
+              extend : {
+                rows : rows,
+                cols : cols
+              },
+              cursor: {
+                row : 1,
+                col : 1
+              },
+              offset : {
+                row: 0,
+                col: 0
+              }
+            },
+              modes : {
+              insert : true
+            },
+            timerids : {
+              timeoutid : false,
+              intervalid : false
+            },
+            textlines : ['',''] // Array to store each line of text. Index 0 is unused.                     
+          };
+          segmentDisplayMatrix.call(this, rows, cols, 'typewriter');
+        };
+        
+        inheritPrototype(Typewriter, segmentDisplayMatrix);
 
+        Typewriter.prototype.addFocusKeyboardHandler = this.protos.addFocusKeyboardHandler;
+        Typewriter.prototype.startCursorInterval = this.protos.startCursorInterval;
+        Typewriter.prototype.showCursor = this.protos.showCursor;
+        Typewriter.prototype.stopCursor = this.protos.stopCursor;
+        Typewriter.prototype.moveCursor = this.protos.moveCursor;                                
+        Typewriter.prototype.gotCharacter = this.protos.gotCharacter;
+        Typewriter.prototype.gotBackspaceKey = this.protos.gotBackspaceKey;
+        Typewriter.prototype.gotInsertKey = this.protos.gotInsertKey;
+        Typewriter.prototype.gotDelete = this.protos.gotDelete;
+        Typewriter.prototype.gotEnter = this.protos.gotEnter;
+        Typewriter.prototype.gotHomeKey = this.protos.gotHomeKey;
+        Typewriter.prototype.gotEndKey = this.protos.gotEndKey;
+        Typewriter.prototype.gotPageUpKey = this.protos.gotPageUpKey;
+        Typewriter.prototype.gotPageDownKey = this.protos.gotPageDownKey;
+        Typewriter.prototype.refreshMatrix = this.protos.refreshMatrix;
+
+        return new Typewriter();
+      },
+      
+      
       // animation objects prototypes   
       protos: {
         // Clock 
@@ -777,11 +861,11 @@ var Animation = function(demo) {
         //Bouncer    
         setBouncer: function() {
           this.setDisplaySegments(this.ball.ypos, this.ball.xpos, 'clear'); // clear old position
-          this.moveball(); // get new position
+          this.moveBall(); // get new position
           this.setCharacter(this.ball.ypos, this.ball.xpos, '▣', 'foreground'); //draw new postition
         },
         // Move bouncer ball
-        moveball: function() {
+        moveBall: function() {
           // check if border touched
           if (this.ball.ypos <= 2) {
             this.ball.ymov = this.ball.ymov * (-1);
@@ -814,20 +898,389 @@ var Animation = function(demo) {
           for (row = 2; row < this.matrix.rows; row++) {
             this.setCharacter(row, 1, '║', htmlcolor);
             this.setCharacter(row, this.matrix.cols, '║', htmlcolor);
+            this.setCharacter(row, 1, '║', htmlcolor);
           }
           return false;
         },
-      }
-    };
-  }
+                
+        // * * * * Typewriter
+        
+        // Add event handler on focus and keyboard
+        addFocusKeyboardHandler : function() {
+          this.keyboardhandler = false;
+          var that = this;
+           
+          // add focus handler
+          this.matrix.svgelements.anchor.addEventListener('focus', function(){
+            that.setCharacter(that.typewriter.position.cursor.row, that.typewriter.position.cursor.col, '_', 'foreground'); // draw cursor before cursor timer does
+            that.startCursorInterval(); // start blinking cursor
+            if (!that.keyboardhandler) {
+              that.keyboardhandler = true;
+              // keypress event
+              this.addEventListener('keypress', function(event) { // keys of printable chars
+                var key = event.which || event.keyCode || 0;
+                  that.gotCharacter(that, key);
+                });
+              this.addEventListener("keydown", function(event) { // special chars
+                var key = event.which || event.keyCode || 0;
+                switch(key) {
+                  case 8 : // backspace
+                    that.gotBackspaceKey(that);
+                    event.preventDefault();
+                    break;
+                  case 13 : // enter
+                    that.gotEnter(that);
+                    event.preventDefault();
+                    break;
+                  case 33 : // Page Up
+                    that.gotPageUpKey(that);
+                    event.preventDefault();
+                    break;
+                  case 34 : // Page Down
+                    that.gotPageDownKey(that);
+                    event.preventDefault();
+                    break;
+                  case 35 : // End
+                    that.gotEndKey(that);
+                    event.preventDefault();
+                    break;
+                  case 36 : // Home
+                    that.gotHomeKey(that);
+                    event.preventDefault();
+                    break;
+                  case 37 : // left
+                    that.moveCursor(that, 'left');
+                    event.preventDefault();
+                    break;
+                  case 38 : // up
+                    that.moveCursor(that, 'up');
+                    event.preventDefault();
+                    break;
+                  case 39 :// right
+                    that.moveCursor(that, 'right');
+                    event.preventDefault();
+                    break;
+                  case 40 :// down
+                    that.moveCursor(that, 'down');
+                    event.preventDefault();
+                    break;
+                  case 45 :// insert
+                    that.gotInsertKey(that);
+                    event.preventDefault();
+                    break;
+                  case 46 :// delete
+                    that.gotDelete(that);
+                    event.preventDefault();
+                 }      
+              });
+             } // end keyboard handler             
+                
+          }, this.matrix.svgelements.anchor); // end focus handler
 
-  // http://javascriptissexy.com/oop-in-javascript-what-you-need-to-know/
-  function inheritPrototype(childObject, parentObject) {
-    var copyOfParent = Object.create(parentObject.prototype);
-    copyOfParent.constructor = childObject;
-    childObject.prototype = copyOfParent;
-  }
-};
+          // blur event
+          this.matrix.svgelements.anchor.addEventListener('blur', function(){
+              that.stopCursor(that);
+            }, this.matrix.svgelements.anchor);
+        },
+        
+        // call showCursor every second
+        startCursorInterval : function() {
+          var that = this;
+          this.typewriter.timerids.intervalid = (function () {
+            return window.setInterval(function () {that.showCursor(that);}, 1000);
+          }());
+        },
+        
+        // show cursor and set timer to clear
+        showCursor : function(that) {          
+          var htmlcolor = that.tools.htmlcolor.call(that, 'foreground');
+          var myrow = that.typewriter.position.cursor.row + that.typewriter.position.offset.row;          
+          var mycol = that.typewriter.position.cursor.col + that.typewriter.position.offset.col;
+          // get char on cursorposition from textlines, if exists 
+          var mychar = (that.typewriter.textlines[myrow] !== undefined) ? that.typewriter.textlines[myrow].substr(mycol -1, 1) : false;  
+          // draw cursor
+          // char present, not empty and not space: use blinking char as cursor
+          if (mychar && mychar.length === 1 && mychar !== ' ') {
+            that.setCharacter(that.typewriter.position.cursor.row, that.typewriter.position.cursor.col, mychar, htmlcolor); // show char 
+          } else { // else use underscore as cursor
+            that.setCharacter(that.typewriter.position.cursor.row, that.typewriter.position.cursor.col, '_', htmlcolor); // show cursor
+          }
+
+          // set timeout clear cursor
+          if (that.typewriter.modes.insert) {
+            that.typewriter.timerids.timeoutid = setTimeout(function () {
+              that.setDisplaySegments(that.typewriter.position.cursor.row, that.typewriter.position.cursor.col, 'clear'); //  clear cursor
+            }, 500);
+          } else {
+           that.typewriter.timerids.timeoutid = setTimeout(function () {
+             that.setDisplaySegments(that.typewriter.position.cursor.row, that.typewriter.position.cursor.col, 'foreground'); //  set all segments
+            }, 500);                      
+          }                                  
+        },
+        
+        // stop cursor from blinking                
+        stopCursor : function(that) {
+          clearInterval(that.typewriter.timerids.intervalid);
+          clearTimeout(that.typewriter.timerids.timeoutid);                      
+        },
+        
+        // move the cursor             
+        moveCursor : function(that, direction) {
+          var settings = {};
+          var myrow = that.typewriter.position.cursor.row + that.typewriter.position.offset.row;
+          var mycol = that.typewriter.position.cursor.col + that.typewriter.position.offset.col;
+
+          switch(direction) {
+            case 'up' : 
+              settings = {
+                isindisplay : (that.typewriter.position.cursor.row > 1),
+                hastoscroll : (that.typewriter.position.offset.row > 0),
+                row: -1,
+                col: 0
+              };
+              break;
+            case 'down' : 
+              settings = {
+                isindisplay : (that.typewriter.position.cursor.row < that.typewriter.position.extend.rows),
+                hastoscroll : true,
+                row: 1,
+                col: 0
+              };
+              if (that.typewriter.textlines[myrow + 1] === undefined) { // add new line if neccesary
+                that.typewriter.textlines[(myrow + 1)] = '';
+              }
+              break;              
+            case 'left' : 
+              settings = {
+                isindisplay : (that.typewriter.position.cursor.col > 1),
+                hastoscroll : (that.typewriter.position.offset.col > 0),
+                row: 0,
+                col: -1
+              };
+              break;
+            case 'right' : 
+              settings = {
+                isindisplay : (that.typewriter.position.cursor.col < that.typewriter.position.extend.cols),
+                hastoscroll : true,
+                row: 0,
+                col: 1
+              };
+              break;
+            default:
+              return true;             
+          }
+
+          if (settings.isindisplay) { // if cursor not touching borders
+            var mychar = that.typewriter.textlines[myrow].substr(mycol -1, 1); // get char on cursorposition
+            that.setCharacter(that.typewriter.position.cursor.row, that.typewriter.position.cursor.col, mychar, 'foreground'); // write old position
+            that.typewriter.position.cursor.row += settings.row;
+            that.typewriter.position.cursor.col += settings.col;
+            clearTimeout(that.typewriter.timerids.timeoutid);
+          } else { if (settings.hastoscroll) {
+              that.typewriter.position.offset.row += settings.row;
+              that.typewriter.position.offset.col += settings.col;
+              that.refreshMatrix(that);
+            } 
+           } 
+          that.setCharacter(that.typewriter.position.cursor.row, that.typewriter.position.cursor.col, '_', 'foreground'); // set new position befor cursor timer does
+        },
+        
+        // printable character
+        gotCharacter : function(that, key) {
+          if (key === 9) return; // Let the browser give focus to next element on TAB-Key       
+          var character = String.fromCodePoint(key);
+          var myrow = that.typewriter.position.cursor.row + that.typewriter.position.offset.row;
+          var mycol = that.typewriter.position.cursor.col + that.typewriter.position.offset.col;
+          var textlinelength = that.typewriter.textlines[myrow].length;
+                    
+          if (mycol == textlinelength + 1) { // append char to end of line
+            that.typewriter.textlines[that.typewriter.position.cursor.row + that.typewriter.position.offset.row] += character;
+          } else { 
+            if(mycol < textlinelength + 1) { // put char in the middle of the line
+              // change textline: firstpart + character + lastpart
+              if (that.typewriter.modes.insert) {          
+                that.typewriter.textlines[myrow] = that.typewriter.textlines[myrow].substr(0, mycol -1) + character +  that.typewriter.textlines[myrow].substr(mycol -1);
+              } else {
+                that.typewriter.textlines[myrow] = that.typewriter.textlines[myrow].substr(0, mycol -1) + character +  that.typewriter.textlines[myrow].substr(mycol);
+              }  
+              that.setLine(that.typewriter.position.cursor.row, that.typewriter.textlines[myrow].substr(that.typewriter.position.offset.col), 'foreground');
+            } else { // put char after end of line
+              // fill line with spaces
+              that.typewriter.textlines[myrow] = that.typewriter.textlines[myrow] + Array(mycol - that.typewriter.textlines[myrow].length).join(' ') + character;
+          }
+         } 
+          that.moveCursor(that, 'right');          
+        },
+
+        // enter
+        gotEnter : function(that) {
+          var myrow = that.typewriter.position.cursor.row + that.typewriter.position.offset.row;
+          var mycol = that.typewriter.position.cursor.col + that.typewriter.position.offset.col;
+          var numberoflines = that.typewriter.textlines.length;
+          // get chars behind cursor
+          var leftpartofline = that.typewriter.textlines[myrow].substr(0, mycol - 1);
+          var rightpartofline = that.typewriter.textlines[myrow].substr(mycol - 1);
+          // move following lines one forward
+          for (var i = numberoflines; i > myrow; i--) {
+            that.typewriter.textlines[i] = that.typewriter.textlines[i-1];                                 
+          }
+          // add the parts of the strings in their lines
+          that.typewriter.textlines[myrow] = leftpartofline; 
+          that.typewriter.textlines[myrow + 1] = rightpartofline;           
+                      
+          that.typewriter.position.cursor.col = 1; // carriage return
+          that.typewriter.position.offset.col = 0;
+          if (that.typewriter.position.cursor.row < that.typewriter.position.extend.rows) { // line feed
+            that.typewriter.position.cursor.row +=1;
+          } else { // scroll down
+            that.typewriter.position.offset.row++;
+           } 
+          that.refreshMatrix(that);
+        },        
+                
+        // backspace
+        gotBackspaceKey : function(that, character) {
+          var myrow = that.typewriter.position.cursor.row + that.typewriter.position.offset.row;
+          var mycol = that.typewriter.position.cursor.col + that.typewriter.position.offset.col;          
+          var upperlinelength = that.typewriter.textlines[myrow - 1].length;
+          var linelength = that.typewriter.textlines[myrow].length;
+          if (mycol == 1) { // cursor at beginning of the line 
+            if (myrow > 1) {
+              
+              var numlines = that.typewriter.textlines.length; 
+              that.typewriter.textlines[myrow - 1] += that.typewriter.textlines[myrow]; // concat lines
+              for (var i =  myrow; i < numlines; i++) { // move up one position every line, beginning at cursorposition  
+                that.typewriter.textlines[i] = that.typewriter.textlines[i + 1];
+              }
+              that.typewriter.textlines.pop(); // delete last line
+              if (that.typewriter.position.cursor.row > 1 ) { // move up the cursor
+                that.typewriter.position.cursor.row--; 
+              } else {
+                that.typewriter.position.offset.row--;
+              }
+              if (upperlinelength < that.typewriter.position.extend.cols) { // no scroll
+                that.typewriter.position.cursor.col = upperlinelength + 1; 
+              } else { // scroll         
+                that.typewriter.position.cursor.col = that.typewriter.position.extend.cols;
+                that.typewriter.position.offset.col = upperlinelength - that.typewriter.position.extend.cols + 1;
+              }            
+              that.refreshMatrix(that);
+            }
+          } else { // cursor at the end of a line
+            if (mycol - 1 === linelength) {
+              that.typewriter.textlines[myrow] = that.typewriter.textlines[myrow].substr(0, linelength -1); // delete last char
+              that.setCharacter(that.typewriter.position.cursor.row, that.typewriter.textlines[myrow].substr(that.typewriter.position.offset.col).length + 1, ' ', 'clear');
+              that.moveCursor(that, 'left');
+            } else {             
+              if (mycol -1 <= linelength) { // cursor in line
+              that.typewriter.textlines[myrow] = that.typewriter.textlines[myrow].substr(0, mycol -2) + that.typewriter.textlines[myrow].substr(mycol-1); // cut out the char on cursorposition
+              that.setCharacter(that.typewriter.position.cursor.row, that.typewriter.textlines[myrow].substr(that.typewriter.position.offset.col).length + 1, ' ', 'clear');
+              that.setLine(that.typewriter.position.cursor.row, that.typewriter.textlines[myrow].substr(that.typewriter.position.offset.col), 'foreground');
+              that.moveCursor(that, 'left'); 
+              } else { 
+                if (mycol - 1 > linelength) { // cursor after line
+                  that.moveCursor(that, 'left');
+                  }
+                }
+              }
+            }      
+         },        
+        // delete
+        gotDelete : function(that, character) {
+          var myrow = that.typewriter.position.cursor.row + that.typewriter.position.offset.row;
+          var mycol = that.typewriter.position.cursor.col + that.typewriter.position.offset.col;
+          var linelength = that.typewriter.textlines[myrow].length;
+          if (mycol -1 < linelength) { // delete in line
+            that.typewriter.textlines[myrow] = that.typewriter.textlines[myrow].substr(0, mycol - 1) + that.typewriter.textlines[myrow].substr(mycol); //cut char ahead of cursor
+            that.setCharacter(that.typewriter.position.cursor.row, that.typewriter.textlines[myrow].substr(that.typewriter.position.offset.col).length + 1, ' ', 'clear');
+            that.setLine(that.typewriter.position.cursor.row, that.typewriter.textlines[myrow].substr(that.typewriter.position.offset.col), 'foreground');
+            } else { // delete after line
+              var spaces = Array(mycol - linelength).join(' ');
+              var nextline = (that.typewriter.textlines[(myrow + 1)] === undefined) ? '' : that.typewriter.textlines[(myrow + 1)]; 
+              var numlines = that.typewriter.textlines.length;
+ 
+              that.typewriter.textlines[myrow] += (spaces + nextline); // concat lines
+              for (var i =  myrow + 1; i < numlines; i++) { // move up one position every line, beginning at cursorposition  
+                that.typewriter.textlines[i] = that.typewriter.textlines[i + 1];
+              }
+              if (numlines > myrow + 1) that.typewriter.textlines.pop(); // delete last line
+              that.refreshMatrix(that);
+            }         
+         },         
+        // toggle insert mode
+        gotInsertKey : function(that, key) {
+          that.typewriter.modes.insert = that.typewriter.modes.insert ? false : true;
+         },
+        // move the cursor to the beginning of the line
+        gotHomeKey : function(that, key) {
+          that.typewriter.position.cursor.col = 1;
+          that.typewriter.position.offset.col = 0;
+          that.refreshMatrix(that);
+         },
+        // jump to end of line
+        gotEndKey : function(that, key) {
+          var myrow = that.typewriter.position.cursor.row + that.typewriter.position.offset.row;
+          var linelength = that.typewriter.textlines[myrow].length > 0 ? that.typewriter.textlines[myrow].length : 0;
+          if (linelength >= that.typewriter.position.extend.cols) { // scroll
+            that.typewriter.position.cursor.col = that.typewriter.position.extend.cols;
+            that.typewriter.position.offset.col = linelength - that.typewriter.position.extend.cols + 1;
+          } else { // noscroll
+            that.typewriter.position.cursor.col = linelength + 1;
+            that.typewriter.position.offset.col = 0;          
+          }
+          that.refreshMatrix(that);
+         },                 
+        // Pageup - uses offset, not cursor
+        gotPageUpKey : function(that) {
+          var offset = that.typewriter.position.offset.row - that.typewriter.position.extend.rows + 1;
+          offset = offset < 0 ? 0 : offset; // displayoffset has to be greater than zero
+          that.typewriter.position.offset.row = offset;
+          that.refreshMatrix(that);          
+         },         
+        // Pagedown 
+        gotPageDownKey : function(that) {
+          that.typewriter.position.offset.row += that.typewriter.position.extend.rows - 1;
+          var myrow = that.typewriter.position.cursor.row + that.typewriter.position.offset.row;
+          var numlines = that.typewriter.textlines.length; 
+          if (numlines < myrow) { // add lines if needed
+            for (var i = numlines; i < myrow + 1; i++ ) {
+              that.typewriter.textlines[i] = '';
+            }
+          }          
+          that.refreshMatrix(that);          
+         },                  
+        // redraw all lines of text
+        refreshMatrix : function(that) {
+         var currentline = '';
+         var myline = '';
+         clearTimeout(that.typewriter.timerids.timeoutid); // clear current cursor timeout
+         for (var line = 1; line <= that.typewriter.position.extend.rows; line++) { // loop lines 
+            myline = line + that.typewriter.position.offset.row; // use offset for textlines array
+            if (that.typewriter.textlines[myline] !== undefined) {
+              currentline = that.typewriter.textlines[myline].substr(that.typewriter.position.offset.col);
+              if (currentline.length < that.typewriter.position.extend.cols) { // if line shorter than matrix then fill with spaces
+                currentline += Array(that.typewriter.position.extend.cols - currentline.length + 1).join(' ');
+              }
+                 that.setLine(line, currentline,'foreground');  // write line to display              
+            } else {
+                that.setLine(line, Array(that.typewriter.position.extend.cols + 1).join(' '), 'foreground'); // write line of spaces to display
+            }
+          }                    
+        } //,
+        
+      } // end protos
+    }; // End return object     
+
+    // http://javascriptissexy.com/oop-in-javascript-what-you-need-to-know/
+    function inheritPrototype(childObject, parentObject) {
+      var copyOfParent = Object.create(parentObject.prototype);
+      copyOfParent.constructor = childObject;
+      childObject.prototype = copyOfParent;
+    }
+  } // end function loadanimations
+}; // end var Animation 
+
+
 
 // **
 // ** Polyfills
@@ -844,7 +1297,7 @@ if (!String.prototype.codePointAt) {
   (function() {
     "use strict"; // needed to support `apply`/`call` with `undefined`/`null`
     var codePointAt = function(position) {
-      if (this == null) {
+      if (this === null) {
         throw TypeError();
       }
       var string = String(this);
@@ -919,4 +1372,67 @@ if (!Array.prototype.includes) {
     }
     return false;
   };
+}
+
+/*! https://mths.be/fromcodepoint v0.2.1 by @mathias */
+if (!String.fromCodePoint) {
+(function() {
+var defineProperty = (function() {
+// IE 8 only supports `Object.defineProperty` on DOM elements
+try {
+var object = {};
+var $defineProperty = Object.defineProperty;
+var result = $defineProperty(object, object, object) && $defineProperty;
+} catch(error) {}
+return result;
+}());
+var stringFromCharCode = String.fromCharCode;
+var floor = Math.floor;
+var fromCodePoint = function(_) {
+var MAX_SIZE = 0x4000;
+var codeUnits = [];
+var highSurrogate;
+var lowSurrogate;
+var index = -1;
+var length = arguments.length;
+if (!length) {
+return '';
+}
+var result = '';
+while (++index < length) {
+var codePoint = Number(arguments[index]);
+if (
+!isFinite(codePoint) || // `NaN`, `+Infinity`, or `-Infinity`
+codePoint < 0 || // not a valid Unicode code point
+codePoint > 0x10FFFF || // not a valid Unicode code point
+floor(codePoint) != codePoint // not an integer
+) {
+throw RangeError('Invalid code point: ' + codePoint);
+}
+if (codePoint <= 0xFFFF) { // BMP code point
+codeUnits.push(codePoint);
+} else { // Astral code point; split in surrogate halves
+// https://mathiasbynens.be/notes/javascript-encoding#surrogate-formulae
+codePoint -= 0x10000;
+highSurrogate = (codePoint >> 10) + 0xD800;
+lowSurrogate = (codePoint % 0x400) + 0xDC00;
+codeUnits.push(highSurrogate, lowSurrogate);
+}
+if (index + 1 == length || codeUnits.length > MAX_SIZE) {
+result += stringFromCharCode.apply(null, codeUnits);
+codeUnits.length = 0;
+}
+}
+return result;
+};
+if (defineProperty) {
+defineProperty(String, 'fromCodePoint', {
+'value': fromCodePoint,
+'configurable': true,
+'writable': true
+});
+} else {
+String.fromCodePoint = fromCodePoint;
+}
+}());
 }
